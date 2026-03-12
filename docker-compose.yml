@@ -1,0 +1,75 @@
+version: "3.9"
+
+networks:
+  mcp-net:
+    driver: bridge
+
+volumes:
+  postgres-data:
+
+services:
+
+  # ───────────────────────────────────────────────────
+  # POSTGRES
+  # Source of truth for mod/tool definitions
+  # ───────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres
+    networks: [mcp-net]
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # ───────────────────────────────────────────────────
+  # REMOTE MOD SERVICE
+  # Simulates the Spring Boot deployment running mods
+  # ───────────────────────────────────────────────────
+  remote-mod-service:
+    build:
+      context: ./remote-mod-service
+      dockerfile: Dockerfile
+    container_name: remote-mod-service
+    networks: [mcp-net]
+    ports:
+      - "10090:8090"
+    environment:
+      EXECUTOR_PORT: ${EXECUTOR_PORT}
+    restart: unless-stopped
+
+  # ───────────────────────────────────────────────────
+  # MCP TOOL SERVER (scale to N instances)
+  # ───────────────────────────────────────────────────
+  mcp-server:
+    build:
+      context: ./mcp-server
+      dockerfile: Dockerfile
+    networks: [mcp-net]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "4000-4002:3000"
+    environment:
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      POSTGRES_PORT: ${POSTGRES_PORT}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      MCP_PORT: ${MCP_PORT}
+      REGISTRY_FLAVOR: ${REGISTRY_FLAVOR}
+      REVALIDATION_INTERVAL_SECONDS: ${REVALIDATION_INTERVAL_SECONDS}
+    restart: unless-stopped
+    deploy:
+      replicas: 3
