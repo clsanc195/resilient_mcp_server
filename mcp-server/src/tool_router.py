@@ -82,6 +82,3 @@ class ToolRouter:
                 "content": [{"type": "text", "text": f"Tool execution failed: {e}"}],
                 "_meta":   {"instanceId": self._instance, "source": source},
             }
-
-    async def list_tools(self) -> list[dict]:
-        return [t.to_mcp_schema() for t in self._cache.list_active()]

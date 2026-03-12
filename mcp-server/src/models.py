@@ -46,10 +46,4 @@ class ToolDefinition(BaseModel):
         """A tool is callable if it's ACTIVE or still within its DEPRECATED grace period."""
         return self.status in (ToolStatus.ACTIVE, ToolStatus.DEPRECATED)
 
-    def to_mcp_schema(self) -> dict:
-        """Convert to the MCP protocol tool schema format for tools/list."""
-        return {
-            "name":        self.toolId,   # toolId is the unique MCP tool name
-            "description": self.description,
-            "inputSchema": self.inputSchema,
-        }
+

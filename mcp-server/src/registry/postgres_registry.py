@@ -135,6 +135,6 @@ class PostgresRegistryProvider(ToolRegistryProvider):
             return
 
         tool = row_to_tool(row)
-        event = "TOOL_DEPRECATED" if status == "DEPRECATED" else "TOOL_REGISTERED"
+        event = "TOOL_DEPRECATED" if status == "DEPRECATED" else "TOOL_UPDATED"
         log.info(f"[Postgres] NOTIFY → {event}: {tool_id}")
         await on_update(event, tool_id, tool)

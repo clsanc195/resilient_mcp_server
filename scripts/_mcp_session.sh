@@ -4,7 +4,8 @@
 
 BASE="${MCP_BASE:-http://localhost:4000}"
 SSE_OUT=$(mktemp)
-trap "rm -f $SSE_OUT; kill $SSE_PID 2>/dev/null" EXIT
+SSE_PID=""
+trap "rm -f $SSE_OUT; [ -n \"$SSE_PID\" ] && kill $SSE_PID 2>/dev/null" EXIT
 
 curl -sN "$BASE/sse" >> "$SSE_OUT" &
 SSE_PID=$!

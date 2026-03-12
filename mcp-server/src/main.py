@@ -80,11 +80,7 @@ async def handle_call_tool(name: str, arguments: dict) -> list[TextContent]:
     result = await router.call_tool(name, arguments or {})
 
     text = result["content"][0]["text"] if result.get("content") else ""
-    meta = result.get("_meta", {})
-
-    # Append _meta to the response text so callers can observe resolution source
-    full_text = f"{text}\n\n[_meta: {meta}]"
-    return [TextContent(type="text", text=full_text)]
+    return [TextContent(type="text", text=text)]
 
 
 # ── Update callback (called by registry provider on tool changes) ─────────────
@@ -96,15 +92,10 @@ async def on_tool_update(event_type: str, tool_id: str, tool: ToolDefinition | N
     """
     log.info(f"[{INSTANCE_ID}] Received update: {event_type} for {tool_id}")
 
-    if event_type in ("TOOL_REGISTERED", "TOOL_UPDATED"):
+    if event_type in ("TOOL_UPDATED", "TOOL_DEPRECATED"):
         if tool:
             cache.set(tool_id, tool)
-            log.info(f"[{INSTANCE_ID}] Cache updated: {tool_id}")
-
-    elif event_type == "TOOL_DEPRECATED":
-        if tool:
-            cache.set(tool_id, tool)
-            log.info(f"[{INSTANCE_ID}] Cache marked deprecated: {tool_id}")
+            log.info(f"[{INSTANCE_ID}] Cache updated ({event_type}): {tool_id}")
 
     elif event_type == "TOOL_RETIRED":
         cache.delete(tool_id)

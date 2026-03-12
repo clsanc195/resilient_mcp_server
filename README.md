@@ -89,7 +89,12 @@ INSERT INTO tools (
     ARRAY['finance'],
     500,
     NOW()
-);
+) ON CONFLICT (tool_id) DO UPDATE SET
+    executor_url  = EXCLUDED.executor_url,
+    status        = EXCLUDED.status,
+    description   = EXCLUDED.description,
+    input_schema  = EXCLUDED.input_schema,
+    approved_at   = EXCLUDED.approved_at;
 ```
 
 ---
@@ -111,3 +116,30 @@ INSERT INTO tools (
 |---|---|
 | `com.acme.tools.customer-lookup:1.0.0` | `http://remote-mod-service:8090/platform/mod/customer-lookup` |
 | `com.acme.tools.order-status:2.1.0` | `http://remote-mod-service:8090/platform/mod/order-status` |
+
+
+###
+  Safe Test sequences:
+
+``` shell
+  # Basic discovery
+  ./scripts/test-list-tools.sh
+
+  # Full e2e execution
+  ./scripts/test-exec.sh
+
+  # Error case
+  ./scripts/test-not-found.sh
+
+  # Live insert + immediate call
+  ./scripts/test-new-tool.sh
+
+  # Retire it (only after test-new-tool.sh)
+  ./scripts/test-remove-tool.sh
+
+  # Re-insert it again (works any number of times)
+  ./scripts/test-new-tool.sh
+
+  test-list-tools.sh, test-exec.sh, and test-not-found.sh are read-only — run them whenever in any order.
+
+```

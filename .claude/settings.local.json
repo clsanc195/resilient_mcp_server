@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(bash scripts/test-list-tools.sh 2>&1)",
+      "Bash(bash scripts/test-exec.sh 2>&1)",
+      "Bash(bash scripts/test-not-found.sh 2>&1)",
+      "Bash(bash scripts/test-new-tool.sh 2>&1)",
+      "Bash(bash scripts/test-remove-tool.sh 2>&1)",
+      "Bash(docker compose:*)"
+    ]
+  }
+}
